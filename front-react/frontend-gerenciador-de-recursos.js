@@ -2,7 +2,7 @@ const express = require('express');
 const path = require('path');
 const app = express();
 
-const hostname = '192.168.1.0';
+const hostname = '192.168.0.21';
 const port = 9002;
 
 // Serve os arquivos estáticos do React

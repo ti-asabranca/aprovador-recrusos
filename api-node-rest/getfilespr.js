@@ -3,15 +3,15 @@ const axios = require('axios');
 const sql = require('mssql');
 const app = express();
 const port = 7000;// No backend/app.js
-const hostname = '192.168.1.0'
+const hostname = '192.168.0.21'
 const cors = require('cors');
 require('dotenv').config();
 
 // Configuração segura do CORS (ambientes de dev e produção)
 const corsOptions = {
-    origin: ['http://localhost:9002', 'http://192.168.1.0:9002', 'https://192.168.1.0:9002', 'http://localhost:7777', 'http://192.168.1.0:7777', 'https://192.168.1.0:9003', 'http://192.168.1.0:9003'],
-    methods: 'GET,PUT,POST,DELETE',
-    allowedHeaders: 'Content-Type,Authorization'
+    origin: '*', // Aceita todas as origens
+    methods: ['GET', 'PUT', 'POST', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
 };
 
 app.use(cors(corsOptions)); // 👈 Use as opções configuradas
@@ -31,7 +31,7 @@ const config = {
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 const REPO_OWNER = process.env.REPO_OWNER;
 const REPO_NAME = process.env.REPO_NAME;
-const FILE_EXTENSIONS = ['.prw', '.tlpp'];
+const FILE_EXTENSIONS = ['.prw', '.tlpp','.trp','.prx'];
 
 // Middleware
 app.use(express.json());

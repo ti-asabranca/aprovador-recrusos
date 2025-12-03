@@ -1,0 +1,6 @@
+# Node/React
+node_modules/
+.env
+*.log
+package-lock.json
+build/

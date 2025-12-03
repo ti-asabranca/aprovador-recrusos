@@ -6,6 +6,7 @@ import { FiCopy, } from 'react-icons/fi';
 import { Modal, Button, Form } from 'react-bootstrap';
 import { FaSort, FaSortUp, FaSortDown } from 'react-icons/fa';
 import { FiInfo } from 'react-icons/fi';
+import { utcToZonedTime, format } from 'date-fns-tz';
 import {
   auth,
   googleProvider,
@@ -27,6 +28,7 @@ const ResourceList = () => {
   const [filterIntegrado, setFilterIntegrado] = useState('false');
   const [textFilter, setTextFilter] = useState('');
   const [loading, setLoading] = useState(false);
+  const timeZone = 'America/Sao_Paulo';
   const [notifications, setNotifications] = useState([]);
   const [syncLoading, setSyncLoading] = useState(false);
   const [syncMessage, setSyncMessage] = useState('');
@@ -59,7 +61,6 @@ const ResourceList = () => {
   const [selectedResourceDetails, setSelectedResourceDetails] = useState([]);
   const [detailsLoading] = useState(false);
   const [selectedResourceName, setSelectedResourceName] = useState('');
-
   // utilitário clipboard
   const copyToClipboard = (text, id) => {
     const fullPath = getFullPath(text);
@@ -71,6 +72,10 @@ const ResourceList = () => {
     }
 
     setProcessedIds(prev => new Set(prev).add(id));
+  };
+
+  const formatZonedDate = (dateStr, fmt = 'dd/MM/yyyy HH:mm:ss') => {
+    return format(utcToZonedTime(dateStr, timeZone), fmt, { timeZone });
   };
 
   const addNotification = (message, type = 'info') => {
@@ -91,7 +96,7 @@ const ResourceList = () => {
 
       setSelectedResourceName(fileName); // 👈 Guarda o nome do recurso
 
-      const response = await axios.get('http://192.168.1.0:7000/recursos-info', {
+      const response = await axios.get('http://192.168.0.21:7000/recursos-info', {
         params: { fonte: fileName }
       });
 
@@ -117,7 +122,7 @@ const ResourceList = () => {
 
   const updateField = async (id, field, value) => {
     try {
-      await axios.put(`http://192.168.1.0:7000/update-resource/${id}`, { [field]: value });
+      await axios.put(`http://192.168.0.21:7000/update-resource/${id}`, { [field]: value });
       fetchResources();
     } catch (error) {
       console.error(`Erro ao atualizar ${field}:`, error);
@@ -158,7 +163,7 @@ const ResourceList = () => {
       // Lógica de auto-complete do PR
       if (!finalPR) {
         try {
-          const response = await axios.get('http://192.168.1.0:7000/get-next-available-pr', {
+          const response = await axios.get('http://192.168.0.21:7000/get-next-available-pr', {
             params: { recurso: recurso }
           });
 
@@ -190,7 +195,7 @@ const ResourceList = () => {
       };
 
       // Chamada para API
-      await axios.post('http://192.168.1.0:7000/recursos', resourceData);
+      await axios.post('http://192.168.0.21:7000/recursos', resourceData);
 
       // Feedback e reset
       addNotification('Recurso criado com sucesso!', 'success');
@@ -215,7 +220,7 @@ const ResourceList = () => {
     setSyncLoading(true);
     setSyncMessage('');
     try {
-      const response = await axios.get('http://192.168.1.0:7000/merged-prs-files');
+      const response = await axios.get('http://192.168.0.21:7000/merged-prs-files');
       if (response.data.success) {
         addNotification('✅ Dados sincronizados com sucesso!', 'success');
         fetchResources();
@@ -232,7 +237,7 @@ const ResourceList = () => {
   const fetchResources = useCallback(async () => {
     setLoading(true);
     try {
-      const resp = await axios.get(`http://192.168.1.0:7000/recursos?integrado=${filterIntegrado}`);
+      const resp = await axios.get(`http://192.168.0.21:7000/recursos?integrado=${filterIntegrado}`);
       setResources(resp.data.data);
       setSelectedIds(new Set());
       setProcessedIds(new Set()); // limpa processados ao recarregar
@@ -323,7 +328,7 @@ const ResourceList = () => {
 
   const toggleStatus = async (id) => {
     try {
-      await axios.put(`http://192.168.1.0:7000/toggle-status/${id}`);
+      await axios.put(`http://192.168.0.21:7000/toggle-status/${id}`);
       fetchResources();
     } catch (error) {
       console.error('Erro ao alterar status:', error);
@@ -333,7 +338,7 @@ const ResourceList = () => {
 
   const handleBulkUpdate = async () => {
     for (let id of selectedIds) {
-      await axios.put(`http://192.168.1.0:7000/toggle-status/${id}`);
+      await axios.put(`http://192.168.0.21:7000/toggle-status/${id}`);
     }
     fetchResources();
   };
@@ -937,10 +942,10 @@ const ResourceList = () => {
                 <tbody>
                   {selectedResourceDetails.map((detail) => (
                     <tr key={detail.id}>
-                      <td>{detail.ambiente_rpo.trim()}</td>
-                      <td>{new Date(detail.data_fonte_rpo).toLocaleDateString('pt-BR')}</td>
-                      <td>{detail.hora_fonte_rpo.split('T')[1].substring(0, 8)}</td>
-                      <td>{new Date(detail.data_atualizacao).toLocaleString('pt-BR')}</td>
+                      <td>{detail.ambiente_rpo.trim().toUpperCase()}</td>
+                      <td>{formatZonedDate(detail.data_fonte_rpo, 'dd/MM/yyyy')}</td>
+                      <td>{formatZonedDate(detail.hora_fonte_rpo, 'HH:mm:ss')}</td>
+                      <td>{formatZonedDate(detail.data_atualizacao)}</td>
                     </tr>
                   ))}
                 </tbody>
